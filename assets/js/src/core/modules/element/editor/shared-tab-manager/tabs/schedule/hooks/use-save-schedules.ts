@@ -26,7 +26,8 @@ interface UseCleanupArchivedSchedulesResponseInterface {
   isSuccess: boolean
   isError: boolean
   error: FetchBaseQueryError | SerializedError | undefined
-  saveSchedules: () => Promise<void>
+  /** Resolves to `true` when the schedules were saved or there was nothing to save, `false` when the request failed */
+  saveSchedules: () => Promise<boolean>
 }
 
 export const useSaveSchedules = (elementType: ElementType, id: number, showNotifications: boolean = true): UseCleanupArchivedSchedulesResponseInterface => {
@@ -55,12 +56,12 @@ export const useSaveSchedules = (elementType: ElementType, id: number, showNotif
     }
   }, [isError])
 
-  const saveSchedules = async (): Promise<void> => {
+  const saveSchedules = async (): Promise<boolean> => {
     if (element?.changes.schedules === undefined) {
       setIsSuccess(true)
-      return
+      return true
     }
-    await updateSchedulesApi({
+    const response = await updateSchedulesApi({
       elementType,
       id,
       body: {
@@ -73,6 +74,8 @@ export const useSaveSchedules = (elementType: ElementType, id: number, showNotif
         }))
       }
     })
+
+    return response.error === undefined
   }
 
   return { isLoading, isSuccess, isError, error, saveSchedules }
